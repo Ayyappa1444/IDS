@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Scheduler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            margin: 5px;
+        }
+        #output {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Event Scheduler</h1>
+
+<label for="description">Event Description:</label>
+<input type="text" id="description" required>
+<br>
+
+<label for="start">Start Time (HH:MM):</label>
+<input type="time" id="start" required>
+<br>
+
+<label for="end">End Time (HH:MM):</label>
+<input type="time" id="end" required>
+<br>
+
+<button onclick="addEvent()">Add Event</button>
+<button onclick="showSchedule()">Show Schedule</button>
+
+<div id="output"></div>
+
+<script>
+    let events = [];
+    let conflicts = [];
+
+    function addEvent() {
+        const description = document.getElementById('description').value;
+        const start = document.getElementById('start').value;
+        const end = document.getElementById('end').value;
+
+        if (!description || !start || !end) {
+            alert("Please fill in all fields.");
+            return;
+        }
+
+        const newEvent = {
+            description: description,
+            start: start,
+            end: end
+        };
+
+        events.push(newEvent);
+        alert("Event added successfully!");
+
+        clearInputs();
+    }
+
+    function showSchedule() {
+        conflicts = []; // Reset conflicts for the new schedule
+        const output = document.getElementById('output');
+        output.innerHTML = "<h2>Sorted Schedule:</h2>";
+
+        if (events.length === 0) {
+            output.innerHTML += "No events scheduled.";
+            return;
+        }
+
+        // Check for conflicts
+        for (let i = 0; i < events.length; i++) {
+            for (let j = i + 1; j < events.length; j++) {
+                if (checkConflict(events[i], events[j])) {
+                    conflicts.push({ event1: events[i], event2: events[j] });
+                }
+            }
+        }
+
+        // Sort events by start time
+        events.sort((a, b) => a.start.localeCompare(b.start));
+
+        events.forEach((event, index) => {
+            output.innerHTML += `${index + 1}. "${event.description}", Start: "${event.start}", End: "${event.end}"<br>`;
+        });
+
+        if (conflicts.length > 0) {
+            output.innerHTML += "<h3>Conflicting Events:</h3>";
+            conflicts.forEach((conflict, index) => {
+                output.innerHTML += `${index + 1}. "${conflict.event1.description}" conflicts with "${conflict.event2.description}"<br>`;
+            });
+
+            // Suggested Resolutions
+            output.innerHTML += "<h3>Suggested Resolutions:</h3>";
+            conflicts.forEach(conflict => {
+                const newStart = conflict.event2.end; // Suggest to start after the conflicting event
+                const newEnd = addDuration(newStart, getDuration(conflict.event1.start, conflict.event1.end));
+                output.innerHTML += `1. Reschedule "${conflict.event1.description}" to Start: "${newStart}", End: "${newEnd}"<br>`;
+            });
+        } else {
+            output.innerHTML += "<h3>No conflicts detected.</h3>";
+        }
+    }
+
+    function checkConflict(event1, event2) {
+        return event1.start < event2.end && event1.end > event2.start;
+    }
+
+    function getDuration(start, end) {
+        const [startHours, startMinutes] = start.split(':').map(Number);
+        const [endHours, endMinutes] = end.split(':').map(Number);
+        return (end)}
